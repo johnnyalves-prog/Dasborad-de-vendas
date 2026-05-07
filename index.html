@@ -604,10 +604,29 @@ let COL_VENDEDOR, COL_VALOR, COL_DATA, COL_TIPO;
 function detectColumns(data) {
   if (!data.length) return;
   const headers = Object.keys(data[0]);
-  COL_VENDEDOR = detectCol(headers, ['vendedor','nome','seller','rep','colaborador']) || headers[0];
-  COL_VALOR    = detectCol(headers, ['valor','value','total','amount','venda','receita','fatura']) || headers[1];
-  COL_DATA     = detectCol(headers, ['data','date','mes','periodo','dt']) || null;
-  COL_TIPO     = detectCol(headers, ['tipo','type','produto','servico','categoria']) || null;
+
+  // Mapeamento direto pelos nomes exatos das colunas da planilha SMART
+  // Coluna E = Vendedor | Coluna H = Quantidade | Coluna L = Data de Criação | Coluna F = Tipo
+  COL_VENDEDOR = headers.find(h => h.trim() === 'Vendedor')
+              || detectCol(headers, ['vendedor','seller','rep','colaborador'])
+              || headers[4] // fallback: 5ª coluna (E)
+              || headers[0];
+
+  COL_VALOR    = headers.find(h => h.trim() === 'Quantidade')
+              || detectCol(headers, ['quantidade','qtd','qty','amount','total','valor','venda'])
+              || headers[7] // fallback: 8ª coluna (H)
+              || headers[1];
+
+  COL_DATA     = headers.find(h => h.trim() === 'Data de Criação')
+              || headers.find(h => h.trim() === 'Data de Criacao')
+              || detectCol(headers, ['data','date','criacao','criação','periodo'])
+              || null;
+
+  COL_TIPO     = headers.find(h => h.trim() === 'Tipo')
+              || detectCol(headers, ['tipo','type','produto','servico','categoria'])
+              || null;
+
+  console.log('Colunas detectadas:', { COL_VENDEDOR, COL_VALOR, COL_DATA, COL_TIPO });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -685,7 +704,9 @@ function getVendedorStats() {
   filteredData.forEach(r => {
     const nome = (r[COL_VENDEDOR]||'').trim();
     if (!nome) return;
-    const val = parseFloat((r[COL_VALOR]||'0').toString().replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
+    // Quantidade é inteiro na planilha SMART
+    const rawVal = (r[COL_VALOR]||'0').toString().replace(/[^0-9]/g,'');
+    const val = parseInt(rawVal, 10) || 0;
     if (!stats[nome]) stats[nome] = 0;
     stats[nome] += val;
   });
@@ -831,7 +852,7 @@ function renderPedidos() {
     const data = COL_DATA ? (r[COL_DATA]||'—') : '—';
     const vendedor = r[COL_VENDEDOR] || '—';
     const tipo = COL_TIPO ? (r[COL_TIPO]||'—') : '—';
-    const val = parseFloat((r[COL_VALOR]||'0').toString().replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
+    const val = parseInt((r[COL_VALOR]||'0').toString().replace(/[^0-9]/g,''), 10) || 0;
     return `<tr>
       <td style="color:var(--text-muted)">${data}</td>
       <td>${vendedor}</td>
