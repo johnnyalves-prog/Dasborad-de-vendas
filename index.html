@@ -286,6 +286,154 @@
 
   .tooltip-custom { font-size: 12px !important; }
   .section-divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
+
+  /* ── EDITOR PANEL ───────────────────────────── */
+  .editor-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px); z-index: 500;
+    display: none; align-items: flex-start; justify-content: flex-end;
+  }
+  .editor-overlay.open { display: flex; }
+  .editor-panel {
+    background: var(--surface); width: 520px; max-width: 98vw;
+    height: 100vh; overflow-y: auto;
+    box-shadow: -8px 0 40px rgba(0,0,0,.18);
+    display: flex; flex-direction: column;
+    animation: slideInRight .3s ease;
+  }
+  @keyframes slideInRight { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+  .editor-header {
+    padding: 24px 24px 18px; border-bottom: 1.5px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: var(--surface); z-index: 10;
+  }
+  .editor-header-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .editor-header-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .editor-close {
+    width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border);
+    background: none; cursor: pointer; font-size: 16px; display: flex;
+    align-items: center; justify-content: center; transition: all .2s;
+    color: var(--text-secondary);
+  }
+  .editor-close:hover { background: var(--bg); color: var(--text-primary); }
+  .editor-body { padding: 20px 24px; flex: 1; }
+  .editor-section { margin-bottom: 28px; }
+  .editor-section-title {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .editor-section-title::before {
+    content: ''; width: 3px; height: 14px; background: var(--blue);
+    border-radius: 2px; display: inline-block;
+  }
+
+  /* Tabela de vendedores */
+  .veditor-table { width: 100%; border-collapse: collapse; }
+  .veditor-table thead th {
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .5px;
+    padding: 0 8px 8px; text-align: left; border-bottom: 1.5px solid var(--border);
+  }
+  .veditor-table tbody tr:hover td { background: var(--bg); }
+  .veditor-table tbody td { padding: 7px 8px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+  .veditor-input {
+    width: 100%; padding: 5px 8px; border: 1.5px solid var(--border);
+    border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 12px;
+    background: var(--surface); color: var(--text-primary); outline: none;
+    transition: border-color .2s;
+  }
+  .veditor-input:focus { border-color: var(--blue); }
+  .veditor-select {
+    width: 100%; padding: 5px 6px; border: 1.5px solid var(--border);
+    border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 11px;
+    background: var(--surface); color: var(--text-primary); outline: none;
+    cursor: pointer; transition: border-color .2s;
+  }
+  .veditor-select:focus { border-color: var(--blue); }
+  .btn-del {
+    width: 26px; height: 26px; border-radius: 6px; border: none;
+    background: #fef2f2; color: #ef4444; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .btn-del:hover { background: #ef4444; color: #fff; }
+
+  /* Adicionar novo vendedor */
+  .add-vendedor-row {
+    display: grid; grid-template-columns: 1fr 80px 1fr auto; gap: 8px; margin-top: 12px; align-items: end;
+  }
+  .add-label { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+
+  /* Times editor */
+  .time-editor-card {
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px; margin-bottom: 10px;
+  }
+  .time-editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .time-editor-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .time-meta-row { display: flex; align-items: center; gap: 8px; }
+  .time-meta-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+  /* Footer do editor */
+  .editor-footer {
+    padding: 16px 24px; border-top: 1.5px solid var(--border);
+    display: flex; gap: 10px; position: sticky; bottom: 0;
+    background: var(--surface);
+  }
+  .btn-save-all {
+    flex: 1; background: var(--blue); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 11px; font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s;
+  }
+  .btn-save-all:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-reset {
+    padding: 11px 18px; border: 1.5px solid var(--border); background: none;
+    border-radius: var(--radius-sm); font-family: 'Poppins', sans-serif;
+    font-size: 13px; cursor: pointer; color: var(--text-secondary); transition: all .2s;
+  }
+  .btn-reset:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+  .save-toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1a202c; color: #fff; padding: 10px 22px; border-radius: 30px;
+    font-size: 13px; font-weight: 600; z-index: 999; opacity: 0;
+    transition: all .3s; pointer-events: none; white-space: nowrap;
+  }
+  .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── THEME PICKER ───────────────────────────── */
+  .theme-btn {
+    width: 100%; display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.06); border: none; border-radius: var(--radius-sm);
+    color: rgba(255,255,255,.7); padding: 10px 12px; cursor: pointer;
+    font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500;
+    transition: all .2s; margin-bottom: 6px;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,.13); color: #fff; }
+
+  .theme-panel {
+    position: fixed; left: 228px; bottom: 80px;
+    background: #1e293b; border-radius: var(--radius); padding: 16px;
+    width: 230px; box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    z-index: 200; display: none;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .theme-panel.open { display: block; animation: slideUp .2s ease; }
+  .theme-panel-title { color: rgba(255,255,255,.5); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+
+  .theme-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer;
+    transition: background .15s; margin-bottom: 4px;
+  }
+  .theme-option:hover { background: rgba(255,255,255,.07); }
+  .theme-option.active { background: rgba(255,255,255,.12); }
+  .theme-option .swatches { display: flex; gap: 4px; }
+  .theme-option .sw {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.2);
+  }
+  .theme-option .label { color: rgba(255,255,255,.8); font-size: 12px; font-weight: 500; }
+  .theme-option .label small { display: block; color: rgba(255,255,255,.35); font-size: 10px; }
 </style>
 </head>
 <body>
@@ -340,6 +488,9 @@
     <div class="nav-item" onclick="document.getElementById('sec-times').scrollIntoView({behavior:'smooth'})">
       <span class="icon">👥</span><span>Times</span>
     </div>
+    <div class="nav-item" onclick="openEditor()">
+      <span class="icon">✏️</span><span>Editar</span>
+    </div>
     <div class="nav-item" onclick="document.getElementById('sec-ranking').scrollIntoView({behavior:'smooth'})">
       <span class="icon">🏆</span><span>Ranking</span>
     </div>
@@ -351,10 +502,72 @@
     </div>
   </div>
   <div class="sidebar-bottom">
+    <button class="theme-btn" onclick="toggleThemePanel()">
+      <span>🎨</span><span>Tema de Cores</span>
+    </button>
     <button class="refresh-btn" onclick="loadData()">
       <span>🔄</span><span>Atualizar</span>
     </button>
     <div class="last-update" id="lastUpdate">—</div>
+  </div>
+
+  <!-- THEME PANEL -->
+  <div class="theme-panel" id="themePanel">
+    <div class="theme-panel-title">Escolha o tema</div>
+
+    <div class="theme-option active" id="theme-azul" onclick="applyTheme('azul')">
+      <div class="swatches">
+        <div class="sw" style="background:#0f172a"></div>
+        <div class="sw" style="background:#3b82f6"></div>
+        <div class="sw" style="background:#f0f4f8"></div>
+      </div>
+      <div class="label">Azul Corporativo<small>Padrão atual</small></div>
+    </div>
+
+    <div class="theme-option" id="theme-smart" onclick="applyTheme('smart')">
+      <div class="swatches">
+        <div class="sw" style="background:#0a0a0a"></div>
+        <div class="sw" style="background:#22c55e"></div>
+        <div class="sw" style="background:#f0f0f0"></div>
+      </div>
+      <div class="label">SMART — Preto & Verde<small>Cores da empresa</small></div>
+    </div>
+
+    <div class="theme-option" id="theme-escuro" onclick="applyTheme('escuro')">
+      <div class="swatches">
+        <div class="sw" style="background:#0f172a"></div>
+        <div class="sw" style="background:#6366f1"></div>
+        <div class="sw" style="background:#1e293b"></div>
+      </div>
+      <div class="label">Dark Mode<small>Fundo escuro</small></div>
+    </div>
+
+    <div class="theme-option" id="theme-roxo" onclick="applyTheme('roxo')">
+      <div class="swatches">
+        <div class="sw" style="background:#1e1b4b"></div>
+        <div class="sw" style="background:#8b5cf6"></div>
+        <div class="sw" style="background:#f5f3ff"></div>
+      </div>
+      <div class="label">Roxo Premium<small>Elegante</small></div>
+    </div>
+
+    <div class="theme-option" id="theme-laranja" onclick="applyTheme('laranja')">
+      <div class="swatches">
+        <div class="sw" style="background:#1c1917"></div>
+        <div class="sw" style="background:#f97316"></div>
+        <div class="sw" style="background:#fff7ed"></div>
+      </div>
+      <div class="label">Laranja & Preto<small>Energia</small></div>
+    </div>
+
+    <div class="theme-option" id="theme-teal" onclick="applyTheme('teal')">
+      <div class="swatches">
+        <div class="sw" style="background:#134e4a"></div>
+        <div class="sw" style="background:#14b8a6"></div>
+        <div class="sw" style="background:#f0fdfa"></div>
+      </div>
+      <div class="label">Teal Moderno<small>Fresco & clean</small></div>
+    </div>
   </div>
 </nav>
 
@@ -1251,11 +1464,440 @@ function exportExcel() {
 }
 
 // ═══════════════════════════════════════════════════════
+//  EDITOR DE VENDEDORES & TIMES
+// ═══════════════════════════════════════════════════════
+
+function openEditor() {
+  buildEditorVendedores();
+  buildEditorTimes();
+  document.getElementById('editorOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditor() {
+  document.getElementById('editorOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeEditorOnBg(e) {
+  if (e.target === document.getElementById('editorOverlay')) closeEditor();
+}
+
+// ── Renderiza tabela de vendedores ────────────────────
+function buildEditorVendedores() {
+  const tbody = document.getElementById('veditorBody');
+
+  // Coleta todos os vendedores: padrão + salvos + encontrados na planilha
+  const todosNomes = new Set([
+    ...Object.keys(METAS_SIMCARD),
+    ...Object.keys(metas)
+  ]);
+
+  // Também adiciona quem aparece nos dados
+  rawData.forEach(r => {
+    const n = (r[COL_VENDEDOR]||'').trim();
+    if (n) todosNomes.add(n);
+  });
+
+  const sorted = [...todosNomes].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+
+  tbody.innerHTML = sorted.map((nome, i) => {
+    const meta = getMeta(nome);
+    const time = getTimeOf(nome);
+    return `<tr data-idx="${i}">
+      <td>
+        <input class="veditor-input" style="min-width:130px"
+          id="vname_${i}" value="${nome}" placeholder="Nome"/>
+      </td>
+      <td>
+        <input class="veditor-input" type="number" style="width:72px"
+          id="vmeta_${i}" value="${meta}"/>
+      </td>
+      <td>
+        <select class="veditor-select" id="vtime_${i}">
+          ${timeOptions(time)}
+        </select>
+      </td>
+      <td>
+        <button class="btn-del" onclick="delVendedorRow(${i})" title="Remover">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function timeOptions(selected) {
+  const opts = ['Time Payments','Time Expansão','Time Inside Sales','Time Parceiros Especiais','Sem Time'];
+  return opts.map(o => `<option value="${o}" ${o===selected?'selected':''}>${o.replace('Time ','')}</option>`).join('');
+}
+
+function delVendedorRow(i) {
+  const tr = document.querySelector(`tr[data-idx="${i}"]`);
+  if (tr) tr.remove();
+}
+
+function addVendedorEditor() {
+  const nome = document.getElementById('addNome').value.trim();
+  const meta = parseInt(document.getElementById('addMeta').value) || 1500;
+  const time = document.getElementById('addTime').value;
+  if (!nome) { alert('Informe o nome do vendedor.'); return; }
+
+  const tbody = document.getElementById('veditorBody');
+  const i     = 'new_' + Date.now();
+  const row   = document.createElement('tr');
+  row.dataset.idx = i;
+  row.innerHTML = `
+    <td><input class="veditor-input" style="min-width:130px" id="vname_${i}" value="${nome}"/></td>
+    <td><input class="veditor-input" type="number" style="width:72px" id="vmeta_${i}" value="${meta}"/></td>
+    <td><select class="veditor-select" id="vtime_${i}">${timeOptions(time)}</select></td>
+    <td><button class="btn-del" onclick="this.closest('tr').remove()" title="Remover">🗑</button></td>`;
+  tbody.appendChild(row);
+
+  document.getElementById('addNome').value = '';
+  document.getElementById('addMeta').value = '';
+}
+
+// ── Renderiza editor de metas dos times ──────────────
+function buildEditorTimes() {
+  const el = document.getElementById('timesEditorContainer');
+  el.innerHTML = Object.entries(TIMES).map(([nome, info]) => `
+    <div class="time-editor-card">
+      <div class="time-editor-header">
+        <div class="time-editor-name" style="display:flex;align-items:center;gap:8px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${info.cor}"></div>
+          ${nome}
+        </div>
+        <span style="font-size:11px;color:var(--text-muted)">${info.membros.length} membros</span>
+      </div>
+      <div class="time-meta-row">
+        <span class="time-meta-label">Meta do time (Simcard):</span>
+        <input class="veditor-input" type="number" style="width:110px"
+          id="tmeta_${nome.replace(/\s/g,'_')}" value="${info.meta}"/>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Salvar tudo ───────────────────────────────────────
+function saveEditor() {
+  const rows  = document.querySelectorAll('#veditorBody tr[data-idx]');
+  const novosMetas   = {};
+  const novasAlocacoes = {}; // nome -> time
+
+  rows.forEach(tr => {
+    const i    = tr.dataset.idx;
+    const nome = (document.getElementById(`vname_${i}`)?.value || '').trim();
+    const meta = parseInt(document.getElementById(`vmeta_${i}`)?.value) || 1500;
+    const time = document.getElementById(`vtime_${i}`)?.value || 'Sem Time';
+    if (!nome) return;
+    novosMetas[nome]      = meta;
+    novasAlocacoes[nome]  = time;
+  });
+
+  // Atualiza metas globais
+  metas = { ...novosMetas };
+  localStorage.setItem('smart_metas', JSON.stringify(metas));
+
+  // Reconstrói membros dos times
+  Object.keys(TIMES).forEach(t => TIMES[t].membros = []);
+  Object.entries(novasAlocacoes).forEach(([nome, time]) => {
+    if (TIMES[time]) TIMES[time].membros.push(nome);
+  });
+
+  // Atualiza metas dos times
+  Object.keys(TIMES).forEach(nome => {
+    const key = nome.replace(/\s/g,'_');
+    const inp = document.getElementById(`tmeta_${key}`);
+    if (inp) TIMES[nome].meta = parseInt(inp.value) || TIMES[nome].meta;
+  });
+
+  // Persiste times
+  const timesData = {};
+  Object.entries(TIMES).forEach(([nome,info]) => {
+    timesData[nome] = { meta: info.meta, membros: info.membros };
+  });
+  localStorage.setItem('smart_times', JSON.stringify(timesData));
+
+  // Extras para não pedir modal de novo
+  const extras = Object.keys(novosMetas);
+  localStorage.setItem('smart_extras', JSON.stringify(extras));
+
+  closeEditor();
+  applyFilters();
+  showToast('✅ Alterações salvas com sucesso!');
+}
+
+function resetEditor() {
+  if (!confirm('Resetar todas as configurações para o padrão original?')) return;
+  localStorage.removeItem('smart_metas');
+  localStorage.removeItem('smart_times');
+  localStorage.removeItem('smart_extras');
+  metas = { ...METAS_SIMCARD };
+
+  // Restaura times padrão
+  TIMES['Time Payments'].membros          = ['Patrick Rodrigues','Acacio Souza','Ana Palhares'];
+  TIMES['Time Expansão'].membros          = ['Claudia Longano','Augusto Rocha','Arisa Mayara','IONE RASTREK','Renato Araujo','DAIANE OLIVEIRA','Daiane oliveira'];
+  TIMES['Time Inside Sales'].membros      = ['Décio Moraes','Henrique Alves','DM Tracker','Joaquim Marinho','Larissa Ariane Alves','Gabriela Geraud','Johnny Alves','VITÓRIA KAROLINE','Vitória Karoline'];
+  TIMES['Time Parceiros Especiais'].membros = ['Loja Do Rastreador','HTL Hilario','Imperio Dos Rastreadores'];
+  TIMES['Time Payments'].meta             = 6000;
+  TIMES['Time Expansão'].meta             = 10000;
+  TIMES['Time Inside Sales'].meta         = 15000;
+  TIMES['Time Parceiros Especiais'].meta  = 3200;
+
+  closeEditor();
+  applyFilters();
+  showToast('🔄 Configurações resetadas!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('saveToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Carrega times salvos ao iniciar
+function loadSavedTimes() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('smart_times') || '{}');
+    Object.entries(saved).forEach(([nome, info]) => {
+      if (TIMES[nome]) {
+        TIMES[nome].meta    = info.meta    || TIMES[nome].meta;
+        TIMES[nome].membros = info.membros || TIMES[nome].membros;
+      }
+    });
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════
+//  TEMAS DE CORES
+// ═══════════════════════════════════════════════════════
+const THEMES = {
+  azul: {
+    '--bg':            '#f0f4f8',
+    '--surface':       '#ffffff',
+    '--surface2':      '#f7f9fc',
+    '--border':        '#e2e8f0',
+    '--text-primary':  '#1a202c',
+    '--text-secondary':'#64748b',
+    '--text-muted':    '#94a3b8',
+    '--blue':          '#3b82f6',
+    '--blue-dark':     '#1d4ed8',
+    '--blue-light':    '#eff6ff',
+    '--teal':          '#0ea5e9',
+    '--sidebar-bg':    '#0f172a',
+    '--sidebar-active':'rgba(14,165,233,.15)',
+    '--sidebar-accent':'#0ea5e9',
+  },
+  smart: {
+    '--bg':            '#f2f4f2',
+    '--surface':       '#ffffff',
+    '--surface2':      '#f7faf7',
+    '--border':        '#d4e6d4',
+    '--text-primary':  '#0a0a0a',
+    '--text-secondary':'#3d5c3d',
+    '--text-muted':    '#6b8f6b',
+    '--blue':          '#16a34a',
+    '--blue-dark':     '#15803d',
+    '--blue-light':    '#dcfce7',
+    '--teal':          '#22c55e',
+    '--sidebar-bg':    '#0a0a0a',
+    '--sidebar-active':'rgba(34,197,94,.15)',
+    '--sidebar-accent':'#22c55e',
+  },
+  escuro: {
+    '--bg':            '#0f172a',
+    '--surface':       '#1e293b',
+    '--surface2':      '#1e293b',
+    '--border':        '#334155',
+    '--text-primary':  '#f1f5f9',
+    '--text-secondary':'#94a3b8',
+    '--text-muted':    '#64748b',
+    '--blue':          '#6366f1',
+    '--blue-dark':     '#4f46e5',
+    '--blue-light':    '#1e1b4b',
+    '--teal':          '#818cf8',
+    '--sidebar-bg':    '#020617',
+    '--sidebar-active':'rgba(99,102,241,.2)',
+    '--sidebar-accent':'#818cf8',
+  },
+  roxo: {
+    '--bg':            '#f5f3ff',
+    '--surface':       '#ffffff',
+    '--surface2':      '#faf8ff',
+    '--border':        '#ddd6fe',
+    '--text-primary':  '#1e1b4b',
+    '--text-secondary':'#5b21b6',
+    '--text-muted':    '#7c3aed',
+    '--blue':          '#8b5cf6',
+    '--blue-dark':     '#7c3aed',
+    '--blue-light':    '#ede9fe',
+    '--teal':          '#a78bfa',
+    '--sidebar-bg':    '#1e1b4b',
+    '--sidebar-active':'rgba(139,92,246,.2)',
+    '--sidebar-accent':'#a78bfa',
+  },
+  laranja: {
+    '--bg':            '#fff7ed',
+    '--surface':       '#ffffff',
+    '--surface2':      '#fffbf5',
+    '--border':        '#fed7aa',
+    '--text-primary':  '#1c1917',
+    '--text-secondary':'#92400e',
+    '--text-muted':    '#b45309',
+    '--blue':          '#f97316',
+    '--blue-dark':     '#ea580c',
+    '--blue-light':    '#ffedd5',
+    '--teal':          '#fb923c',
+    '--sidebar-bg':    '#1c1917',
+    '--sidebar-active':'rgba(249,115,22,.18)',
+    '--sidebar-accent':'#f97316',
+  },
+  teal: {
+    '--bg':            '#f0fdfa',
+    '--surface':       '#ffffff',
+    '--surface2':      '#f5fefc',
+    '--border':        '#99f6e4',
+    '--text-primary':  '#134e4a',
+    '--text-secondary':'#0f766e',
+    '--text-muted':    '#14b8a6',
+    '--blue':          '#0d9488',
+    '--blue-dark':     '#0f766e',
+    '--blue-light':    '#ccfbf1',
+    '--teal':          '#14b8a6',
+    '--sidebar-bg':    '#134e4a',
+    '--sidebar-active':'rgba(20,184,166,.2)',
+    '--sidebar-accent':'#14b8a6',
+  }
+};
+
+let activeTheme = localStorage.getItem('smart_theme') || 'azul';
+
+function applyTheme(name) {
+  const t = THEMES[name];
+  if (!t) return;
+  const root = document.documentElement.style;
+  Object.entries(t).forEach(([k,v]) => root.setProperty(k, v));
+
+  // Sidebar bg precisa de seletor direto
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) sidebar.style.background = t['--sidebar-bg'];
+
+  // Atualiza estado ativo
+  document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+  const opt = document.getElementById('theme-' + name);
+  if (opt) opt.classList.add('active');
+
+  activeTheme = name;
+  localStorage.setItem('smart_theme', name);
+
+  // Fecha painel
+  closeThemePanel();
+
+  // Recharts se necessário
+  setTimeout(renderAll, 100);
+}
+
+function toggleThemePanel() {
+  const p = document.getElementById('themePanel');
+  p.classList.toggle('open');
+}
+
+function closeThemePanel() {
+  document.getElementById('themePanel').classList.remove('open');
+}
+
+// Fecha ao clicar fora
+document.addEventListener('click', e => {
+  const panel = document.getElementById('themePanel');
+  const btn   = document.querySelector('.theme-btn');
+  if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+    closeThemePanel();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
 document.getElementById('greetName').textContent = 'Gestor SMART';
+loadSavedTimes();
+applyTheme(activeTheme);
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
 </script>
+
+<!-- EDITOR OVERLAY -->
+<div class="editor-overlay" id="editorOverlay" onclick="closeEditorOnBg(event)">
+  <div class="editor-panel" id="editorPanel">
+    <div class="editor-header">
+      <div>
+        <div class="editor-header-title">✏️ Editor de Vendedores & Times</div>
+        <div class="editor-header-sub">Altere nomes, metas e times sem mexer no código</div>
+      </div>
+      <button class="editor-close" onclick="closeEditor()">✕</button>
+    </div>
+
+    <div class="editor-body">
+
+      <!-- VENDEDORES -->
+      <div class="editor-section">
+        <div class="editor-section-title">Vendedores & Metas (Simcard)</div>
+        <table class="veditor-table">
+          <thead><tr>
+            <th>Nome</th>
+            <th>Meta</th>
+            <th>Time</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="veditorBody"></tbody>
+        </table>
+
+        <!-- Adicionar novo -->
+        <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">➕ Adicionar Vendedor</div>
+          <div class="add-vendedor-row">
+            <div>
+              <div class="add-label">Nome</div>
+              <input class="veditor-input" id="addNome" placeholder="Nome completo"/>
+            </div>
+            <div>
+              <div class="add-label">Meta</div>
+              <input class="veditor-input" id="addMeta" type="number" placeholder="1500"/>
+            </div>
+            <div>
+              <div class="add-label">Time</div>
+              <select class="veditor-select" id="addTime">
+                <option value="Time Payments">Payments</option>
+                <option value="Time Expansão">Expansão</option>
+                <option value="Time Inside Sales" selected>Inside Sales</option>
+                <option value="Time Parceiros Especiais">Parceiros</option>
+                <option value="Sem Time">Sem Time</option>
+              </select>
+            </div>
+            <div style="padding-bottom:1px">
+              <div class="add-label">&nbsp;</div>
+              <button class="btn-save-all" style="padding:6px 14px;font-size:12px" onclick="addVendedorEditor()">+ Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METAS DOS TIMES -->
+      <div class="editor-section">
+        <div class="editor-section-title">Metas dos Times (Simcard)</div>
+        <div id="timesEditorContainer"></div>
+      </div>
+
+    </div><!-- /editor-body -->
+
+    <div class="editor-footer">
+      <button class="btn-reset" onclick="resetEditor()">🗑️ Resetar tudo</button>
+      <button class="btn-save-all" onclick="saveEditor()">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="save-toast" id="saveToast">✅ Alterações salvas com sucesso!</div>
+
 </body>
 </html>
