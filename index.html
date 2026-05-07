@@ -467,7 +467,7 @@
   <div class="middle-grid" id="sec-ranking">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">🏆 Top Clientes / Vendedores</div>
+        <div class="card-title">📦 Top Vendedores — Simcard</div>
       </div>
       <div id="topClientesContainer"></div>
     </div>
@@ -479,10 +479,54 @@
     </div>
     <div class="card">
       <div class="card-header">
-        <div class="card-title">📈 Top 10 Vendedores</div>
+        <div class="card-title">📈 Top 10 Vendedores — Simcard</div>
       </div>
       <canvas id="chartBarras" height="220"></canvas>
     </div>
+  </div>
+
+  <!-- TOP HARDWARE -->
+  <div class="middle-grid" style="margin-bottom:24px">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🔧 Top Vendedores — Hardware</div>
+          <div class="card-sub">Sem meta individual</div>
+        </div>
+        <span class="badge" style="background:#fffbeb;color:#f59e0b">Hardware</span>
+      </div>
+      <div id="topHardwareContainer"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🥧 Simcard vs Hardware</div>
+        <div class="card-sub">Volume geral por produto</div>
+      </div>
+      <canvas id="chartProdutos" height="200"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📊 Produto por Time</div>
+        <div class="card-sub">Simcard e Hardware por equipe</div>
+      </div>
+      <canvas id="chartTimeProduto" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- CANCELADOS -->
+  <div class="section-title">🚫 Pedidos Cancelados</div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Quantidade Cancelada por Período</div>
+        <div class="card-sub">Soma da coluna Quantidade com status Cancelado</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text-muted)">Total cancelado</div>
+        <div id="totalCancelados" style="font-size:22px;font-weight:800;color:#ef4444">0</div>
+      </div>
+    </div>
+    <canvas id="chartCancelados" height="120"></canvas>
   </div>
 
   <!-- TABELAS -->
@@ -523,7 +567,10 @@
 // ═══════════════════════════════════════════════════════
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUtfeeYLwz9Z-3IAGqVY8PwQoI6YkEWAhM9KW4wWZis7BY3shypQk7lS7ldci0uTxhpKmDQTev8WzT/pub?gid=0&single=true&output=csv";
 
-const METAS_PADRAO = {
+// Coluna J = Status | valores que significam cancelado
+const STATUS_CANCELADO = ['cancelado','cancelada','cancel'];
+
+const METAS_SIMCARD = {
   "VITÓRIA KAROLINE": 2000,
   "Décio Moraes": 2500,
   "Loja Do Rastreador": 1000,
@@ -532,6 +579,7 @@ const METAS_PADRAO = {
   "DM Tracker": 1500,
   "Joaquim Marinho": 1500,
   "DAIANE OLIVEIRA": 1500,
+  "Daiane oliveira": 1500,
   "Larissa Ariane Alves": 1500,
   "Gabriela Geraud": 1500,
   "Johnny Alves": 1500,
@@ -543,26 +591,22 @@ const METAS_PADRAO = {
   "Claudia Longano": 1500,
   "Ana Palhares": 1500,
   "Acacio Souza": 1500,
-  "Patrick Rodrigues": 1500,
-  "DAIANE OLIVEIRA": 1500
+  "Patrick Rodrigues": 1500
 };
 
 const TIMES = {
-  "Time Payments": { meta: 6000, cor: "#3b82f6", membros: ["Patrick Rodrigues","Acacio Souza","Ana Palhares"] },
-  "Time Expansão": { meta: 10000, cor: "#10b981", membros: ["Claudia Longano","Augusto Rocha","Arisa Mayara","IONE RASTREK","Renato Araujo"] },
-  "Time Inside Sales": { meta: 15000, cor: "#8b5cf6", membros: ["Décio Moraes","Henrique Alves","DM Tracker","Joaquim Marinho","Larissa Ariane Alves","Gabriela Geraud","Johnny Alves"] },
+  "Time Payments":          { meta: 6000,  cor: "#3b82f6", membros: ["Patrick Rodrigues","Acacio Souza","Ana Palhares"] },
+  "Time Expansão":          { meta: 10000, cor: "#10b981", membros: ["Claudia Longano","Augusto Rocha","Arisa Mayara","IONE RASTREK","Renato Araujo","DAIANE OLIVEIRA","Daiane oliveira"] },
+  "Time Inside Sales":      { meta: 15000, cor: "#8b5cf6", membros: ["Décio Moraes","Henrique Alves","DM Tracker","Joaquim Marinho","Larissa Ariane Alves","Gabriela Geraud","Johnny Alves","VITÓRIA KAROLINE","Vitória Karoline"] },
   "Time Parceiros Especiais": { meta: 3200, cor: "#f59e0b", membros: ["Loja Do Rastreador","HTL Hilario","Imperio Dos Rastreadores"] }
 };
 
-// Estado local
 let rawData = [];
 let filteredData = [];
-let metas = { ...METAS_PADRAO };
-let novosVendedores = [];
+let metas = { ...METAS_SIMCARD };
 let modalQueue = [];
 let charts = {};
 
-// Carregar metas salvas
 try {
   const saved = JSON.parse(localStorage.getItem('smart_metas') || '{}');
   metas = { ...metas, ...saved };
@@ -591,7 +635,8 @@ function parseCSV(text) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  DETECTAR COLUNAS
+//  COLUNAS — mapeamento fixo pela planilha SMART
+//  E=Vendedor  F=Tipo  H=Quantidade  J=Status  L=Data de Criação
 // ═══════════════════════════════════════════════════════
 function detectCol(headers, keywords) {
   const h = headers.map(x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
@@ -599,118 +644,46 @@ function detectCol(headers, keywords) {
   return headers[h.findIndex(col => kw.some(k => col.includes(k)))] || null;
 }
 
-let COL_VENDEDOR, COL_VALOR, COL_DATA, COL_TIPO;
+let COL_VENDEDOR, COL_VALOR, COL_DATA, COL_TIPO, COL_STATUS;
 
 function detectColumns(data) {
   if (!data.length) return;
   const headers = Object.keys(data[0]);
-
-  // Mapeamento direto pelos nomes exatos das colunas da planilha SMART
-  // Coluna E = Vendedor | Coluna H = Quantidade | Coluna L = Data de Criação | Coluna F = Tipo
-  COL_VENDEDOR = headers.find(h => h.trim() === 'Vendedor')
-              || detectCol(headers, ['vendedor','seller','rep','colaborador'])
-              || headers[4] // fallback: 5ª coluna (E)
-              || headers[0];
-
-  COL_VALOR    = headers.find(h => h.trim() === 'Quantidade')
-              || detectCol(headers, ['quantidade','qtd','qty','amount','total','valor','venda'])
-              || headers[7] // fallback: 8ª coluna (H)
-              || headers[1];
-
-  COL_DATA     = headers.find(h => h.trim() === 'Data de Criação')
-              || headers.find(h => h.trim() === 'Data de Criacao')
-              || detectCol(headers, ['data','date','criacao','criação','periodo'])
-              || null;
-
-  COL_TIPO     = headers.find(h => h.trim() === 'Tipo')
-              || detectCol(headers, ['tipo','type','produto','servico','categoria'])
-              || null;
-
-  console.log('Colunas detectadas:', { COL_VENDEDOR, COL_VALOR, COL_DATA, COL_TIPO });
-}
-
-// ═══════════════════════════════════════════════════════
-//  CARREGAR DADOS
-// ═══════════════════════════════════════════════════════
-async function loadData() {
-  document.getElementById('loadingOverlay').classList.remove('hidden');
-  try {
-    const res = await fetch(SHEET_URL + '&t=' + Date.now());
-    const text = await res.text();
-    rawData = parseCSV(text);
-    detectColumns(rawData);
-    populateMesFilter();
-    checkNovosVendedores();
-    applyFilters();
-    document.getElementById('lastUpdate').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  } catch(e) {
-    console.error('Erro ao carregar dados:', e);
-    alert('Não foi possível carregar os dados. Verifique se a planilha está publicada como CSV.');
-  }
-  document.getElementById('loadingOverlay').classList.add('hidden');
-}
-
-// ═══════════════════════════════════════════════════════
-//  FILTROS
-// ═══════════════════════════════════════════════════════
-function populateMesFilter() {
-  const sel = document.getElementById('filterMes');
-  const meses = new Set();
-  rawData.forEach(r => {
-    if (COL_DATA && r[COL_DATA]) meses.add(r[COL_DATA].substring(0,7));
-  });
-  const opts = [...meses].sort().reverse();
-  sel.innerHTML = '<option value="">Todos os Meses</option>' + opts.map(m => `<option value="${m}">${formatMes(m)}</option>`).join('');
-}
-
-function formatMes(ym) {
-  if (!ym || !ym.includes('-')) return ym;
-  const [y,m] = ym.split('-');
-  const nomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  return `${nomes[parseInt(m)-1]} ${y}`;
-}
-
-function applyFilters() {
-  const time = document.getElementById('filterTime').value;
-  const mes  = document.getElementById('filterMes').value;
-  const q    = document.getElementById('searchInput').value.toLowerCase();
-
-  filteredData = rawData.filter(r => {
-    const vendedor = (r[COL_VENDEDOR]||'').toLowerCase();
-    const rMes = COL_DATA ? (r[COL_DATA]||'').substring(0,7) : '';
-    const inTime = !time || getTimeOf(r[COL_VENDEDOR]) === time;
-    const inMes  = !mes  || rMes === mes;
-    const inQ    = !q    || vendedor.includes(q);
-    return inTime && inMes && inQ;
-  });
-
-  renderAll();
+  COL_VENDEDOR = headers.find(h => h.trim() === 'Vendedor')      || detectCol(headers,['vendedor']) || headers[4];
+  COL_VALOR    = headers.find(h => h.trim() === 'Quantidade')    || detectCol(headers,['quantidade','qtd']) || headers[7];
+  COL_DATA     = headers.find(h => /data.*cria/i.test(h))        || detectCol(headers,['data','date']) || null;
+  COL_TIPO     = headers.find(h => h.trim() === 'Tipo')          || detectCol(headers,['tipo','type']) || null;
+  COL_STATUS   = headers.find(h => h.trim() === 'Status')        || detectCol(headers,['status']) || null;
+  console.log('Cols:', {COL_VENDEDOR, COL_VALOR, COL_DATA, COL_TIPO, COL_STATUS});
 }
 
 // ═══════════════════════════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════════════════════════
-function getTimeOf(nome) {
-  if (!nome) return 'Sem Time';
-  const n = nome.trim();
-  for (const [t, info] of Object.entries(TIMES)) {
-    if (info.membros.some(m => m.toLowerCase() === n.toLowerCase())) return t;
-  }
-  return 'Sem Time';
+function isCancelado(r) {
+  if (!COL_STATUS) return false;
+  const s = (r[COL_STATUS]||'').toLowerCase().trim();
+  return STATUS_CANCELADO.some(c => s.includes(c));
 }
 
-function getVendedorStats() {
-  const stats = {};
-  filteredData.forEach(r => {
-    const nome = (r[COL_VENDEDOR]||'').trim();
-    if (!nome) return;
-    // Quantidade é inteiro na planilha SMART
-    const rawVal = (r[COL_VALOR]||'0').toString().replace(/[^0-9]/g,'');
-    const val = parseInt(rawVal, 10) || 0;
-    if (!stats[nome]) stats[nome] = 0;
-    stats[nome] += val;
-  });
-  return stats;
+function getQtd(r) {
+  return parseInt((r[COL_VALOR]||'0').toString().replace(/[^0-9]/g,''), 10) || 0;
+}
+
+function getTipo(r) {
+  return (r[COL_TIPO]||'').toLowerCase().trim();
+}
+
+function isSimcard(r)  { return getTipo(r).includes('simcard'); }
+function isHardware(r) { return getTipo(r).includes('hardware'); }
+
+function getTimeOf(nome) {
+  if (!nome) return 'Sem Time';
+  const n = nome.trim().toLowerCase();
+  for (const [t, info] of Object.entries(TIMES)) {
+    if (info.membros.some(m => m.toLowerCase() === n)) return t;
+  }
+  return 'Sem Time';
 }
 
 function getMeta(nome) {
@@ -725,39 +698,123 @@ function corBarra(pct) {
   return 'fill-red';
 }
 
-function fmtR(val) {
-  return 'R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+// Números inteiros — sem R$
+function fmt(val) {
+  return val.toLocaleString('pt-BR');
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATS POR TIPO  (exclui cancelados)
+// ═══════════════════════════════════════════════════════
+function getStats(tipo) {
+  // tipo: 'simcard' | 'hardware' | 'all'
+  const stats = {};
+  filteredData.forEach(r => {
+    if (isCancelado(r)) return;
+    if (tipo === 'simcard'  && !isSimcard(r))  return;
+    if (tipo === 'hardware' && !isHardware(r)) return;
+    const nome = (r[COL_VENDEDOR]||'').trim();
+    if (!nome) return;
+    stats[nome] = (stats[nome]||0) + getQtd(r);
+  });
+  return stats;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CARREGAR DADOS
+// ═══════════════════════════════════════════════════════
+async function loadData() {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  try {
+    const res  = await fetch(SHEET_URL + '&t=' + Date.now());
+    const text = await res.text();
+    rawData = parseCSV(text);
+    detectColumns(rawData);
+    populateMesFilter();
+    checkNovosVendedores();
+    applyFilters();
+    document.getElementById('lastUpdate').textContent =
+      'Atualizado: ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    console.error(e);
+    alert('Erro ao carregar dados. Verifique a planilha.');
+  }
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILTROS
+// ═══════════════════════════════════════════════════════
+function populateMesFilter() {
+  const sel  = document.getElementById('filterMes');
+  const mesesSet = new Set();
+  rawData.forEach(r => {
+    if (COL_DATA && r[COL_DATA]) mesesSet.add(r[COL_DATA].substring(0,7));
+  });
+  const opts = [...mesesSet].sort().reverse();
+  sel.innerHTML = '<option value="">Todos os Meses</option>' +
+    opts.map(m => `<option value="${m}">${formatMes(m)}</option>`).join('');
+}
+
+function formatMes(ym) {
+  if (!ym || !ym.includes('-')) return ym;
+  const [y,m] = ym.split('-');
+  const nomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${nomes[parseInt(m)-1]}/${y}`;
+}
+
+function applyFilters() {
+  const time = document.getElementById('filterTime').value;
+  const mes  = document.getElementById('filterMes').value;
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+
+  filteredData = rawData.filter(r => {
+    const vendedor = (r[COL_VENDEDOR]||'').toLowerCase();
+    const rMes     = COL_DATA ? (r[COL_DATA]||'').substring(0,7) : '';
+    const inTime   = !time || getTimeOf(r[COL_VENDEDOR]) === time;
+    const inMes    = !mes  || rMes === mes;
+    const inQ      = !q    || vendedor.includes(q);
+    return inTime && inMes && inQ;
+  });
+
+  renderAll();
 }
 
 // ═══════════════════════════════════════════════════════
 //  RENDER ALL
 // ═══════════════════════════════════════════════════════
 function renderAll() {
-  const stats = getVendedorStats();
-  renderKPIs(stats);
-  renderMetas(stats);
-  renderTimes(stats);
-  renderRanking(stats);
+  const statsSimcard  = getStats('simcard');
+  const statsHardware = getStats('hardware');
+
+  renderKPIs(statsSimcard);
+  renderMetas(statsSimcard);
+  renderTimes(statsSimcard);
+  renderRanking(statsSimcard);
   renderPedidos();
-  renderTopClientes(stats);
+  renderTopSimcard(statsSimcard);
+  renderTopHardware(statsHardware);
   renderChartEvolucao();
-  renderChartDonut(stats);
-  renderChartBarras(stats);
+  renderChartDonut(statsSimcard);
+  renderChartBarras(statsSimcard);
+  renderChartProdutos();
+  renderChartTimeProduto();
+  renderChartCancelados();
 }
 
 // ═══════════════════════════════════════════════════════
-//  KPIs
+//  KPIs  (apenas Simcard, sem cancelados)
 // ═══════════════════════════════════════════════════════
 function renderKPIs(stats) {
   const totalReal = Object.values(stats).reduce((a,b)=>a+b,0);
   const totalMeta = Object.keys(stats).reduce((a,n)=>a+getMeta(n),0);
-  const pct = totalMeta > 0 ? (totalReal/totalMeta*100) : 0;
+  const pct   = totalMeta > 0 ? (totalReal/totalMeta*100) : 0;
   const falta = Math.max(0, totalMeta - totalReal);
 
-  document.getElementById('kpiRealizado').textContent = fmtR(totalReal);
-  document.getElementById('kpiMeta').textContent = fmtR(totalMeta);
-  document.getElementById('kpiPct').textContent = pct.toFixed(1)+'%';
-  document.getElementById('kpiFalta').textContent = fmtR(falta);
+  document.getElementById('kpiRealizado').textContent  = fmt(totalReal);
+  document.getElementById('kpiMeta').textContent       = fmt(totalMeta);
+  document.getElementById('kpiPct').textContent        = pct.toFixed(1)+'%';
+  document.getElementById('kpiFalta').textContent      = fmt(falta);
   document.getElementById('kpiVendedores').textContent = Object.keys(stats).length;
 }
 
@@ -768,8 +825,8 @@ function renderMetas(stats) {
   const sorted = Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const el = document.getElementById('metasContainer');
   el.innerHTML = sorted.map(([nome, val]) => {
-    const meta = getMeta(nome);
-    const pct  = meta > 0 ? Math.min((val/meta*100),100) : 0;
+    const meta  = getMeta(nome);
+    const pct   = meta > 0 ? Math.min((val/meta*100),100) : 0;
     const color = corBarra(pct);
     const falta = Math.max(0, meta - val);
     return `<div class="meta-item">
@@ -778,8 +835,8 @@ function renderMetas(stats) {
         <div class="meta-pct" style="color:${pct>=100?'#d97706':pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444'}">${pct.toFixed(0)}%</div>
       </div>
       <div class="meta-vals">
-        <span>${fmtR(val)}</span>
-        <span>Meta: ${fmtR(meta)}</span>
+        <span>${fmt(val)} un.</span>
+        <span>Meta: ${fmt(meta)}</span>
       </div>
       <div class="progress-bar"><div class="progress-fill ${color}" style="width:${pct}%"></div></div>
     </div>`;
@@ -796,7 +853,7 @@ function renderTimes(stats) {
       const chave = Object.keys(stats).find(k=>k.toLowerCase()===m.toLowerCase());
       return a + (chave ? stats[chave] : 0);
     }, 0);
-    const pct  = info.meta > 0 ? (realizado/info.meta*100) : 0;
+    const pct   = info.meta > 0 ? (realizado/info.meta*100) : 0;
     const falta = Math.max(0, info.meta - realizado);
     const color = corBarra(pct);
     return `<div class="time-card">
@@ -808,10 +865,10 @@ function renderTimes(stats) {
         <div class="time-dot" style="background:${info.cor}"></div>
       </div>
       <div class="time-stats">
-        <div><div class="time-stat-label">Realizado</div><div class="time-stat-val" style="color:${info.cor}">${fmtR(realizado)}</div></div>
-        <div><div class="time-stat-label">Meta</div><div class="time-stat-val">${fmtR(info.meta)}</div></div>
+        <div><div class="time-stat-label">Realizado</div><div class="time-stat-val" style="color:${info.cor}">${fmt(realizado)}</div></div>
+        <div><div class="time-stat-label">Meta</div><div class="time-stat-val">${fmt(info.meta)}</div></div>
         <div><div class="time-stat-label">% Atingido</div><div class="time-stat-val">${pct.toFixed(1)}%</div></div>
-        <div><div class="time-stat-label">Falta</div><div class="time-stat-val" style="color:#ef4444">${fmtR(falta)}</div></div>
+        <div><div class="time-stat-label">Falta</div><div class="time-stat-val" style="color:#ef4444">${fmt(falta)}</div></div>
       </div>
       <div class="progress-bar"><div class="progress-fill ${color}" style="width:${Math.min(pct,100)}%"></div></div>
     </div>`;
@@ -823,19 +880,19 @@ function renderTimes(stats) {
 // ═══════════════════════════════════════════════════════
 function renderRanking(stats) {
   const sorted = Object.entries(stats).sort((a,b)=>b[1]-a[1]);
-  const tbody = document.getElementById('tbodyRanking');
+  const tbody  = document.getElementById('tbodyRanking');
   tbody.innerHTML = sorted.map(([nome,val],i) => {
-    const meta = getMeta(nome);
-    const pct  = meta > 0 ? (val/meta*100) : 0;
-    const color = corBarra(pct);
+    const meta      = getMeta(nome);
+    const pct       = meta > 0 ? (val/meta*100) : 0;
+    const color     = corBarra(pct);
     const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
-    const time = getTimeOf(nome);
+    const time      = getTimeOf(nome);
     return `<tr>
       <td><span class="rank-badge ${rankClass}">${i+1}</span></td>
       <td><strong>${nome}</strong></td>
       <td><span style="font-size:11px;color:var(--text-muted)">${time}</span></td>
-      <td>${fmtR(val)}</td>
-      <td>${fmtR(meta)}</td>
+      <td>${fmt(val)}</td>
+      <td>${fmt(meta)}</td>
       <td><strong style="color:${pct>=100?'#d97706':pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444'}">${pct.toFixed(0)}%</strong></td>
       <td><div class="progress-bar" style="min-width:70px"><div class="progress-fill ${color}" style="width:${Math.min(pct,100)}%"></div></div></td>
     </tr>`;
@@ -843,29 +900,31 @@ function renderRanking(stats) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  PEDIDOS
+//  PEDIDOS  (sem cancelados)
 // ═══════════════════════════════════════════════════════
 function renderPedidos() {
-  const ultimos = [...filteredData].reverse().slice(0,15);
-  const tbody = document.getElementById('tbodyPedidos');
+  const ativos = filteredData.filter(r => !isCancelado(r));
+  const ultimos = [...ativos].reverse().slice(0,15);
+  const tbody   = document.getElementById('tbodyPedidos');
   tbody.innerHTML = ultimos.map(r => {
-    const data = COL_DATA ? (r[COL_DATA]||'—') : '—';
+    const data     = COL_DATA   ? (r[COL_DATA]||'—')   : '—';
     const vendedor = r[COL_VENDEDOR] || '—';
-    const tipo = COL_TIPO ? (r[COL_TIPO]||'—') : '—';
-    const val = parseInt((r[COL_VALOR]||'0').toString().replace(/[^0-9]/g,''), 10) || 0;
+    const tipo     = COL_TIPO   ? (r[COL_TIPO]||'—')   : '—';
+    const val      = getQtd(r);
+    const corTipo  = tipo.toLowerCase().includes('hardware') ? '#f59e0b' : '#3b82f6';
     return `<tr>
       <td style="color:var(--text-muted)">${data}</td>
       <td>${vendedor}</td>
-      <td><span style="font-size:11px;background:var(--blue-light);color:var(--blue);padding:2px 7px;border-radius:10px">${tipo}</span></td>
-      <td><strong>${fmtR(val)}</strong></td>
+      <td><span style="font-size:11px;background:${corTipo}18;color:${corTipo};padding:2px 7px;border-radius:10px">${tipo}</span></td>
+      <td><strong>${fmt(val)}</strong></td>
     </tr>`;
   }).join('') || '<tr><td colspan="4" class="empty">Sem pedidos</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════════
-//  TOP CLIENTES
+//  TOP SIMCARD
 // ═══════════════════════════════════════════════════════
-function renderTopClientes(stats) {
+function renderTopSimcard(stats) {
   const sorted = Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const el = document.getElementById('topClientesContainer');
   el.innerHTML = sorted.map(([nome,val],i) => `
@@ -877,39 +936,98 @@ function renderTopClientes(stats) {
           <div style="font-size:10px;color:var(--text-muted)">${getTimeOf(nome)}</div>
         </div>
       </div>
-      <strong style="font-size:13px;color:var(--blue)">${fmtR(val)}</strong>
+      <strong style="font-size:13px;color:var(--blue)">${fmt(val)} un.</strong>
     </div>
   `).join('') || '<div class="empty">Sem dados</div>';
 }
 
 // ═══════════════════════════════════════════════════════
-//  GRÁFICO EVOLUÇÃO
+//  TOP HARDWARE  (sem meta)
+// ═══════════════════════════════════════════════════════
+function renderTopHardware(stats) {
+  const sorted = Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const el = document.getElementById('topHardwareContainer');
+  el.innerHTML = sorted.map(([nome,val],i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="rank-badge ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}" style="flex-shrink:0">${i+1}</span>
+        <div>
+          <div style="font-size:12px;font-weight:600">${nome}</div>
+          <div style="font-size:10px;color:var(--text-muted)">${getTimeOf(nome)}</div>
+        </div>
+      </div>
+      <strong style="font-size:13px;color:#f59e0b">${fmt(val)} un.</strong>
+    </div>
+  `).join('') || '<div class="empty">Sem dados de hardware</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRÁFICO EVOLUÇÃO — labels fixos
 // ═══════════════════════════════════════════════════════
 function renderChartEvolucao() {
   if (charts.evolucao) charts.evolucao.destroy();
   const mesesMap = {};
   filteredData.forEach(r => {
+    if (isCancelado(r)) return;
     if (!COL_DATA) return;
     const mes = (r[COL_DATA]||'').substring(0,7);
     if (!mes) return;
-    const val = parseFloat((r[COL_VALOR]||'0').toString().replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
-    mesesMap[mes] = (mesesMap[mes]||0) + val;
+    mesesMap[mes] = (mesesMap[mes]||0) + getQtd(r);
   });
-  const labels = Object.keys(mesesMap).sort().map(formatMes);
-  const vals   = Object.keys(mesesMap).sort().map(k => mesesMap[k]);
-  const ctx = document.getElementById('chartEvolucao').getContext('2d');
-  const grad = ctx.createLinearGradient(0,0,0,300);
-  grad.addColorStop(0,'rgba(59,130,246,0.25)');
+  const keys   = Object.keys(mesesMap).sort();
+  const labels = keys.map(formatMes);
+  const vals   = keys.map(k => mesesMap[k]);
+  const ctx    = document.getElementById('chartEvolucao').getContext('2d');
+  const grad   = ctx.createLinearGradient(0,0,0,260);
+  grad.addColorStop(0,'rgba(59,130,246,0.22)');
   grad.addColorStop(1,'rgba(59,130,246,0)');
   charts.evolucao = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets: [{ label:'Vendas', data: vals, borderColor:'#3b82f6', backgroundColor: grad, tension:.4, fill:true, pointBackgroundColor:'#3b82f6', pointRadius:4 }] },
-    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ ticks:{ callback: v => 'R$'+v.toLocaleString('pt-BR') }, grid:{ color:'#f0f4f8' } }, x:{ grid:{ display:false } } } }
+    data: { labels, datasets: [{
+      label: 'Qtd Simcard',
+      data: vals,
+      borderColor: '#3b82f6',
+      backgroundColor: grad,
+      tension: .4,
+      fill: true,
+      pointBackgroundColor: '#3b82f6',
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]},
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        // Labels fixos em cada ponto
+        datalabels: { display: false }
+      },
+      scales: {
+        y: { ticks: { callback: v => fmt(v) }, grid: { color: '#f0f4f8' } },
+        x: { grid: { display: false } }
+      },
+      // Mostrar valor acima de cada ponto via animation
+      animation: {
+        onComplete: function() {
+          const chart = this;
+          const ctx2  = chart.ctx;
+          ctx2.font   = '600 11px Poppins';
+          ctx2.fillStyle  = '#3b82f6';
+          ctx2.textAlign  = 'center';
+          ctx2.textBaseline = 'bottom';
+          chart.data.datasets.forEach((ds, di) => {
+            const meta = chart.getDatasetMeta(di);
+            meta.data.forEach((pt, i) => {
+              ctx2.fillText(fmt(ds.data[i]), pt.x, pt.y - 6);
+            });
+          });
+        }
+      }
+    }
   });
 }
 
 // ═══════════════════════════════════════════════════════
-//  GRÁFICO DONUT
+//  GRÁFICO DONUT — Simcard por Time
 // ═══════════════════════════════════════════════════════
 function renderChartDonut(stats) {
   if (charts.donut) charts.donut.destroy();
@@ -921,27 +1039,146 @@ function renderChartDonut(stats) {
   const labels = Object.keys(timeTotals);
   const vals   = Object.values(timeTotals);
   const cores  = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ef4444','#64748b'];
-  const ctx = document.getElementById('chartDonut').getContext('2d');
+  const ctx    = document.getElementById('chartDonut').getContext('2d');
   charts.donut = new Chart(ctx, {
     type: 'doughnut',
     data: { labels, datasets:[{ data:vals, backgroundColor: cores.slice(0,labels.length), borderWidth:2, borderColor:'#fff' }] },
-    options: { responsive:true, cutout:'65%', plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, padding:12 } } } }
+    options: {
+      responsive:true, cutout:'65%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{size:11}, padding:12 } },
+        tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)} un.` } }
+      }
+    }
   });
 }
 
 // ═══════════════════════════════════════════════════════
-//  GRÁFICO BARRAS
+//  GRÁFICO BARRAS — Top 10 Simcard
 // ═══════════════════════════════════════════════════════
 function renderChartBarras(stats) {
   if (charts.barras) charts.barras.destroy();
-  const top10 = Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const top10  = Object.entries(stats).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const labels = top10.map(([n])=>n.split(' ')[0]);
   const vals   = top10.map(([,v])=>v);
-  const ctx = document.getElementById('chartBarras').getContext('2d');
+  const ctx    = document.getElementById('chartBarras').getContext('2d');
   charts.barras = new Chart(ctx, {
     type:'bar',
-    data:{ labels, datasets:[{ label:'Realizado', data:vals, backgroundColor:'rgba(59,130,246,0.8)', borderRadius:6, borderSkipped:false }] },
-    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#f0f4f8'}},x:{grid:{display:false}}} }
+    data:{ labels, datasets:[{ label:'Simcard', data:vals, backgroundColor:'rgba(59,130,246,0.8)', borderRadius:6, borderSkipped:false }] },
+    options:{
+      responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${fmt(c.raw)} un.` } } },
+      scales:{ y:{ ticks:{callback:v=>fmt(v)}, grid:{color:'#f0f4f8'} }, x:{grid:{display:false}} }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRÁFICO PRODUTOS — Simcard vs Hardware geral
+// ═══════════════════════════════════════════════════════
+function renderChartProdutos() {
+  if (charts.produtos) charts.produtos.destroy();
+  let totalSim = 0, totalHard = 0;
+  filteredData.forEach(r => {
+    if (isCancelado(r)) return;
+    if (isSimcard(r))  totalSim  += getQtd(r);
+    if (isHardware(r)) totalHard += getQtd(r);
+  });
+  const ctx = document.getElementById('chartProdutos').getContext('2d');
+  charts.produtos = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Simcard','Hardware'],
+      datasets:[{ data:[totalSim,totalHard], backgroundColor:['#3b82f6','#f59e0b'], borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{
+      responsive:true, cutout:'60%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{size:11}, padding:12 } },
+        tooltip:{ callbacks:{ label: c => ` ${c.label}: ${fmt(c.raw)} un.` } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRÁFICO TIME x PRODUTO — barras agrupadas
+// ═══════════════════════════════════════════════════════
+function renderChartTimeProduto() {
+  if (charts.timeProduto) charts.timeProduto.destroy();
+  const timeNames = Object.keys(TIMES);
+  const simPorTime  = [];
+  const hardPorTime = [];
+
+  timeNames.forEach(time => {
+    const membros = TIMES[time].membros;
+    let s = 0, h = 0;
+    filteredData.forEach(r => {
+      if (isCancelado(r)) return;
+      const v = (r[COL_VENDEDOR]||'').trim();
+      if (!membros.some(m => m.toLowerCase() === v.toLowerCase())) return;
+      if (isSimcard(r))  s += getQtd(r);
+      if (isHardware(r)) h += getQtd(r);
+    });
+    simPorTime.push(s);
+    hardPorTime.push(h);
+  });
+
+  const ctx = document.getElementById('chartTimeProduto').getContext('2d');
+  charts.timeProduto = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: timeNames.map(t => t.replace('Time ','')),
+      datasets:[
+        { label:'Simcard',  data:simPorTime,  backgroundColor:'rgba(59,130,246,0.85)', borderRadius:5 },
+        { label:'Hardware', data:hardPorTime, backgroundColor:'rgba(245,158,11,0.85)',  borderRadius:5 }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ position:'top', labels:{font:{size:11}} }, tooltip:{ callbacks:{ label: c => ` ${c.dataset.label}: ${fmt(c.raw)} un.` } } },
+      scales:{ y:{ ticks:{callback:v=>fmt(v)}, grid:{color:'#f0f4f8'} }, x:{grid:{display:false}} }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRÁFICO CANCELADOS — soma de Qtd por status cancelado
+// ═══════════════════════════════════════════════════════
+function renderChartCancelados() {
+  if (charts.cancelados) charts.cancelados.destroy();
+
+  // Agrupa todos os cancelados por mês
+  const porMes = {};
+  filteredData.forEach(r => {
+    if (!isCancelado(r)) return;
+    const mes = COL_DATA ? (r[COL_DATA]||'').substring(0,7) : 'Sem data';
+    porMes[mes] = (porMes[mes]||0) + getQtd(r);
+  });
+
+  const keys   = Object.keys(porMes).sort();
+  const labels = keys.map(k => k === 'Sem data' ? k : formatMes(k));
+  const vals   = keys.map(k => porMes[k]);
+  const total  = vals.reduce((a,b)=>a+b,0);
+
+  document.getElementById('totalCancelados').textContent = fmt(total) + ' un.';
+
+  const ctx = document.getElementById('chartCancelados').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,'rgba(239,68,68,0.25)');
+  grad.addColorStop(1,'rgba(239,68,68,0)');
+
+  charts.cancelados = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{ label:'Cancelados', data:vals, backgroundColor:'rgba(239,68,68,0.75)', borderRadius:5 }]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${fmt(c.raw)} un. canceladas` } } },
+      scales:{ y:{ ticks:{callback:v=>fmt(v)}, grid:{color:'#f0f4f8'} }, x:{grid:{display:false}} }
+    }
   });
 }
 
@@ -951,7 +1188,7 @@ function renderChartBarras(stats) {
 function checkNovosVendedores() {
   const todos = new Set(rawData.map(r=>(r[COL_VENDEDOR]||'').trim().toLowerCase()).filter(Boolean));
   const conhecidos = new Set([
-    ...Object.keys(METAS_PADRAO).map(k=>k.toLowerCase()),
+    ...Object.keys(METAS_SIMCARD).map(k=>k.toLowerCase()),
     ...(JSON.parse(localStorage.getItem('smart_extras')||'[]').map(k=>k.toLowerCase()))
   ]);
   modalQueue = [...todos].filter(v => v && !conhecidos.has(v));
@@ -960,7 +1197,7 @@ function checkNovosVendedores() {
 
 function showNextModal() {
   if (!modalQueue.length) return;
-  const nome = modalQueue.shift();
+  const nome     = modalQueue.shift();
   const original = rawData.find(r=>(r[COL_VENDEDOR]||'').toLowerCase()===nome)?.[COL_VENDEDOR] || nome;
   document.getElementById('newVendedorNome').value = original;
   document.getElementById('modalOverlay').classList.add('show');
@@ -968,7 +1205,7 @@ function showNextModal() {
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');
-  setTimeout(showNextModal,300);
+  setTimeout(showNextModal, 300);
 }
 
 function saveNewVendedor() {
@@ -996,16 +1233,14 @@ function saveNewVendedor() {
 // ═══════════════════════════════════════════════════════
 //  EXPORT
 // ═══════════════════════════════════════════════════════
-function exportPDF() {
-  window.print();
-}
+function exportPDF() { window.print(); }
 
 function exportExcel() {
-  const stats = getVendedorStats();
-  const rows = [['Vendedor','Time','Realizado','Meta','% Atingido','Falta']];
+  const stats = getStats('simcard');
+  const rows  = [['Vendedor','Time','Simcard Realizado','Meta','% Atingido','Falta']];
   Object.entries(stats).sort((a,b)=>b[1]-a[1]).forEach(([nome,val]) => {
-    const meta = getMeta(nome);
-    const pct  = meta > 0 ? (val/meta*100).toFixed(1)+'%' : '0%';
+    const meta  = getMeta(nome);
+    const pct   = meta > 0 ? (val/meta*100).toFixed(1)+'%' : '0%';
     const falta = Math.max(0,meta-val);
     rows.push([nome, getTimeOf(nome), val, meta, pct, falta]);
   });
@@ -1020,7 +1255,7 @@ function exportExcel() {
 // ═══════════════════════════════════════════════════════
 document.getElementById('greetName').textContent = 'Gestor SMART';
 loadData();
-setInterval(loadData, 5 * 60 * 1000); // Refresh a cada 5 minutos
+setInterval(loadData, 5 * 60 * 1000);
 </script>
 </body>
 </html>
